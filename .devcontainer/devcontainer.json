@@ -21,7 +21,7 @@
       }
     }
   },
-  "postCreateCommand": "bash setup.sh",
+  "postCreateCommand": "WORK_DIR=$PWD && echo \"[ ! -f /tmp/.workshop-setup-done ] && touch /tmp/.workshop-setup-done && cd $WORK_DIR && bash setup.sh\" >> ~/.bashrc",
   "forwardPorts": [3000, 5173],
   "portsAttributes": {
     "3000": { "label": "App", "onAutoForward": "openBrowser" },
