@@ -95,6 +95,7 @@ fi
 # === CONFIGURATIE STARTEN ===
 
 # 1. API key opslaan
+echo "ANTHROPIC_API_KEY=$API_KEY" > .env
 echo "export ANTHROPIC_API_KEY=$API_KEY" >> ~/.bashrc
 export ANTHROPIC_API_KEY="$API_KEY"
 
@@ -108,7 +109,14 @@ echo -e "  ⚙️  Stack: ${BOLD}$STACK_NAME${NC}"
 echo -e "  📋 Template: ${BOLD}$TEMPLATE${NC}"
 echo ""
 
-# 2. Bestanden wegschrijven
+# 2. Claude Code installeren
+if ! command -v claude &> /dev/null; then
+  echo -e "  ${DIM}Claude Code installeren...${NC}"
+  npm install -g @anthropic-ai/claude-code --silent 2>/dev/null
+  echo -e "     ${GREEN}✓ Claude Code geïnstalleerd${NC}"
+fi
+
+# 3. Bestanden wegschrijven
 echo -e "  ${DIM}Bestanden configureren...${NC}"
 FILE_COUNT=$(echo "$RESPONSE" | jq -r '.config.files | length')
 
