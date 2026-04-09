@@ -1,0 +1,30 @@
+{
+  "name": "Vibe Coding Workshop",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropics.claude-code",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint"
+      ],
+      "settings": {
+        "files.autoSave": "afterDelay",
+        "editor.formatOnSave": true,
+        "editor.fontSize": 14,
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "workbench.startupEditor": "readme"
+      }
+    }
+  },
+  "postCreateCommand": "bash setup.sh",
+  "forwardPorts": [3000, 5173],
+  "portsAttributes": {
+    "3000": { "label": "App", "onAutoForward": "openBrowser" },
+    "5173": { "label": "Vite Dev Server", "onAutoForward": "openBrowser" }
+  }
+}
