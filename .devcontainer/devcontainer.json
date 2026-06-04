@@ -1,19 +1,13 @@
 {
   "name": "Vibe Coding Workshop",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "20"
-    },
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "version": "latest"
-    },
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "customizations": {
     "vscode": {
       "extensions": [
-        "anthropic.claude-code",
+        "anthropics.claude-code",
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
         "dbaeumer.vscode-eslint"
@@ -27,7 +21,8 @@
       }
     }
   },
-  "postCreateCommand": "WORK_DIR=$PWD && echo \"[ ! -f /tmp/.workshop-setup-done ] && touch /tmp/.workshop-setup-done && cd $WORK_DIR && bash setup.sh\" >> ~/.bashrc",
+  "postCreateCommand": "bash setup.sh",
+  "waitFor": "postCreateCommand",
   "forwardPorts": [3000, 5173],
   "portsAttributes": {
     "3000": { "label": "App", "onAutoForward": "openBrowser" },

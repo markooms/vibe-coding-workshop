@@ -1,182 +1,57 @@
 #!/bin/bash
 
-# Blue Bricks — Vibe Coding Workshop Setup
-# Dit script draait automatisch bij het openen van een Codespace.
+# Blue Bricks — Vibe Coding Workshop Setup (build-stap)
+# Dit script draait AUTOMATISCH en NIET-INTERACTIEF bij het bouwen van de Codespace
+# (via postCreateCommand in .devcontainer/devcontainer.json).
+#
+# Het vraagt bewust NIETS: lifecycle-hooks van een devcontainer hebben geen
+# interactieve terminal, dus 'read' werkt hier niet. Daarom doen we hier alleen
+# het zware, niet-interactieve werk (dependencies + Claude Code installeren) en
+# registreren we een hook in ~/.bashrc die het interactieve deel (workshop-init.sh)
+# afvuurt zodra de deelnemer een terminal opent.
 
-KEY_SERVICE_URL="https://unskillful-stompingly-cleora.ngrok-free.dev"
+set -e
 
-# Kleuren
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-DIM='\033[2m'
-NC='\033[0m'
+# Absoluut pad naar deze repo (robuust, ongeacht waar de Codespace 'm mount).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INIT_SCRIPT="$SCRIPT_DIR/workshop-init.sh"
 
-clear
-echo ""
-echo -e "${BLUE}██████╗ ██╗     ██╗   ██╗███████╗${NC}"
-echo -e "${BLUE}██╔══██╗██║     ██║   ██║██╔════╝${NC}"
-echo -e "${BLUE}██████╔╝██║     ██║   ██║█████╗  ${NC}"
-echo -e "${BLUE}██╔══██╗██║     ██║   ██║██╔══╝  ${NC}"
-echo -e "${BLUE}██████╔╝███████╗╚██████╔╝███████╗${NC}"
-echo -e "${BLUE}╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝${NC}"
-echo -e "${BLUE}██████╗ ██████╗ ██╗ ██████╗██╗  ██╗███████╗${NC}"
-echo -e "${BLUE}██╔══██╗██╔══██╗██║██╔════╝██║ ██╔╝██╔════╝${NC}"
-echo -e "${BLUE}██████╔╝██████╔╝██║██║     █████╔╝ ███████╗${NC}"
-echo -e "${BLUE}██╔══██╗██╔══██╗██║██║     ██╔═██╗ ╚════██║${NC}"
-echo -e "${BLUE}██████╔╝██║  ██║██║╚██████╗██║  ██╗███████║${NC}"
-echo -e "${BLUE}╚═════╝ ╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝${NC}"
-echo ""
-echo -e "  ${BOLD}Vibe Coding Workshop${NC}"
-echo -e "  ${DIM}─────────────────────${NC}"
-echo ""
+echo "▶ Workshop build-stap gestart..."
 
-# Vraag input
-read -p "$(echo -e "${CYAN}?${NC}") Voer je workshopcode in: " WORKSHOP_CODE
-read -p "$(echo -e "${CYAN}?${NC}") Voer je naam in: " PARTICIPANT_NAME
-
-echo ""
-
-# Validatie
-if [ -z "$WORKSHOP_CODE" ] || [ -z "$PARTICIPANT_NAME" ]; then
-  echo -e "  ${RED}✗ Workshopcode en naam zijn verplicht.${NC}"
-  echo -e "  Probeer opnieuw met: ${BOLD}bash setup.sh${NC}"
-  echo ""
-  exit 1
+# 1. Claude Code CLI installeren (zodat 'claude' meteen beschikbaar is in de terminal)
+if ! command -v claude >/dev/null 2>&1; then
+  echo "  • Claude Code CLI installeren..."
+  npm install -g @anthropic-ai/claude-code >/dev/null 2>&1 || \
+    echo "  ⚠️  Kon Claude Code CLI niet globaal installeren (gaat mogelijk via de VS Code-extensie)."
+else
+  echo "  • Claude Code CLI is al aanwezig."
 fi
 
-# Haal configuratie op van de key vending service
-echo -e "  ${DIM}Verbinden met workshop service...${NC}"
-
-RESPONSE=$(curl -s -X POST "$KEY_SERVICE_URL/api/claim-key" \
-  -H "Content-Type: application/json" \
-  -H "ngrok-skip-browser-warning: 1" \
-  -d "{\"workshopCode\": \"$WORKSHOP_CODE\", \"participantName\": \"$PARTICIPANT_NAME\"}")
-
-# Check of curl gelukt is
-if [ $? -ne 0 ] || [ -z "$RESPONSE" ]; then
-  echo ""
-  echo -e "  ${YELLOW}⚠️  Kan de workshop service niet bereiken.${NC}"
-  echo ""
-  echo -e "  Mogelijke oorzassen:"
-  echo -e "  ${DIM}• De workshopleider heeft de service nog niet gestart${NC}"
-  echo -e "  ${DIM}• Je hebt geen internetverbinding${NC}"
-  echo ""
-  echo -e "  Probeer opnieuw met: ${BOLD}bash setup.sh${NC}"
-  echo ""
-  exit 1
+# 2. jq controleren (nodig in workshop-init.sh voor het verwerken van de config-response)
+if ! command -v jq >/dev/null 2>&1; then
+  echo "  • jq installeren..."
+  sudo apt-get update -qq >/dev/null 2>&1 && sudo apt-get install -y -qq jq >/dev/null 2>&1 || \
+    echo "  ⚠️  Kon jq niet installeren."
 fi
 
-# Check voor errors in de response
-ERROR=$(echo "$RESPONSE" | jq -r '.error // empty')
-if [ -n "$ERROR" ]; then
-  echo ""
-  echo -e "  ${YELLOW}⚠️  $ERROR${NC}"
-  echo ""
-  echo -e "  Probeer opnieuw met: ${BOLD}bash setup.sh${NC}"
-  echo ""
-  exit 1
+# 3. workshop-init.sh uitvoerbaar maken
+chmod +x "$INIT_SCRIPT" 2>/dev/null || true
+
+# 4. Hook registreren in ~/.bashrc: draai workshop-init.sh één keer in de eerste
+#    interactieve terminal. Beschermd door:
+#    - interactieve shell-check ([[ $- == *i* ]])
+#    - vlag-bestand ~/.workshop-setup-done (gezet door workshop-init.sh bij succes)
+HOOK_MARKER="# >>> vibe-workshop init hook >>>"
+if ! grep -q "$HOOK_MARKER" ~/.bashrc 2>/dev/null; then
+  {
+    echo ""
+    echo "$HOOK_MARKER"
+    echo "if [[ \$- == *i* ]] && [ ! -f \"\$HOME/.workshop-setup-done\" ]; then"
+    echo "  bash \"$INIT_SCRIPT\""
+    echo "fi"
+    echo "# <<< vibe-workshop init hook <<<"
+  } >> ~/.bashrc
+  echo "  • Terminal-hook geregistreerd in ~/.bashrc"
 fi
 
-# Check API key
-API_KEY=$(echo "$RESPONSE" | jq -r '.apiKey // empty')
-if [ -z "$API_KEY" ]; then
-  echo ""
-  echo -e "  ${YELLOW}⚠️  Geen API key ontvangen.${NC}"
-  echo ""
-  echo -e "  Probeer opnieuw met: ${BOLD}bash setup.sh${NC}"
-  echo ""
-  exit 1
-fi
-
-# === CONFIGURATIE STARTEN ===
-
-# 1. API key opslaan
-echo "ANTHROPIC_API_KEY=$API_KEY" > .env
-echo "export ANTHROPIC_API_KEY=$API_KEY" >> ~/.bashrc
-export ANTHROPIC_API_KEY="$API_KEY"
-
-# Haal config op
-STACK=$(echo "$RESPONSE" | jq -r '.config.stack // "onbekend"')
-TEMPLATE=$(echo "$RESPONSE" | jq -r '.config.template // "onbekend"')
-STACK_NAME="$STACK"
-START_CMD=$(echo "$RESPONSE" | jq -r '.config.startCommand // empty')
-
-echo -e "  ⚙️  Stack: ${BOLD}$STACK_NAME${NC}"
-echo -e "  📋 Template: ${BOLD}$TEMPLATE${NC}"
-echo ""
-
-# 2. Claude Code installeren
-if ! command -v claude &> /dev/null; then
-  echo -e "  ${DIM}Claude Code installeren...${NC}"
-  npm install -g @anthropic-ai/claude-code --silent 2>/dev/null
-  echo -e "     ${GREEN}✓ Claude Code geïnstalleerd${NC}"
-fi
-
-# 3. Bestanden wegschrijven
-echo -e "  ${DIM}Bestanden configureren...${NC}"
-FILE_COUNT=$(echo "$RESPONSE" | jq -r '.config.files | length')
-
-if [ "$FILE_COUNT" -gt 0 ]; then
-  echo "$RESPONSE" | jq -r '.config.files | to_entries[] | @base64' | while read -r entry; do
-    FILENAME=$(echo "$entry" | base64 -d | jq -r '.key')
-    CONTENT=$(echo "$entry" | base64 -d | jq -r '.value')
-
-    # Maak directory aan als nodig
-    DIRNAME=$(dirname "$FILENAME")
-    if [ "$DIRNAME" != "." ]; then
-      mkdir -p "$DIRNAME"
-    fi
-
-    echo "$CONTENT" > "$FILENAME"
-    echo -e "     ${GREEN}✓${NC} $FILENAME"
-  done
-fi
-
-# 3. Packages installeren
-PACKAGES=$(echo "$RESPONSE" | jq -r '.config.packages // [] | join(" ")')
-DEV_PACKAGES=$(echo "$RESPONSE" | jq -r '.config.devDependencies // [] | join(" ")')
-
-if [ -n "$PACKAGES" ] && [ "$PACKAGES" != "" ]; then
-  echo ""
-  echo -e "  📦 Packages installeren..."
-  npm install $PACKAGES --silent 2>/dev/null
-  echo -e "     ${GREEN}✓ $PACKAGES${NC}"
-fi
-
-if [ -n "$DEV_PACKAGES" ] && [ "$DEV_PACKAGES" != "" ]; then
-  npm install -D $DEV_PACKAGES --silent 2>/dev/null
-  echo -e "     ${GREEN}✓ $DEV_PACKAGES${NC} ${DIM}(dev)${NC}"
-fi
-
-# 4. Dev-server starten
-if [ -n "$START_CMD" ]; then
-  echo ""
-  echo -e "  🚀 ${GREEN}Dev-server starten...${NC}"
-  $START_CMD &>/dev/null &
-  sleep 2
-  echo -e "     ${GREEN}✓ Server draait${NC}"
-fi
-
-# === KLAAR ===
-
-echo ""
-echo -e "  ${DIM}────────────────────────────────────${NC}"
-echo -e "  ${GREEN}${BOLD}✅ Alles is klaar!${NC}"
-echo ""
-echo -e "  Open een nieuwe terminal en typ:"
-echo ""
-echo -e "     ${BOLD}claude${NC}"
-echo ""
-
-# Check of er INSTRUCTIONS.md is
-if [ -f "INSTRUCTIONS.md" ]; then
-  echo -e "  Lees ${BOLD}INSTRUCTIONS.md${NC} voor je eerste opdracht."
-fi
-
-echo -e "  Veel plezier met bouwen! 🧱"
-echo -e "  ${DIM}────────────────────────────────────${NC}"
-echo ""
+echo "✓ Build-stap klaar. De workshopvragen verschijnen zodra de deelnemer een terminal opent."
