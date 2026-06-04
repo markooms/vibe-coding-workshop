@@ -1,8 +1,0 @@
-Verplaats install naar onCreateCommand voor prebuilds + harden setup.sh
-
-- devcontainer.json: postCreateCommand -> onCreateCommand (+ waitFor), zodat
-  Codespaces Prebuilds de install meebakken en de Codespace in seconden klaar is.
-- setup.sh: 'set -e' verwijderd en expliciete 'exit 0', zodat een tijdelijke
-  netwerk-/npm-hapering nooit de hele Codespace-creatie laat falen.
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
