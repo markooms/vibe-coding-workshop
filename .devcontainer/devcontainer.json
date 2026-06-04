@@ -21,8 +21,8 @@
       }
     }
   },
-  "postCreateCommand": "bash setup.sh",
-  "waitFor": "postCreateCommand",
+  "onCreateCommand": "bash setup.sh",
+  "waitFor": "onCreateCommand",
   "forwardPorts": [3000, 5173],
   "portsAttributes": {
     "3000": { "label": "App", "onAutoForward": "openBrowser" },

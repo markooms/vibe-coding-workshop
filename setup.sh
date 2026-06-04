@@ -2,15 +2,22 @@
 
 # Blue Bricks — Vibe Coding Workshop Setup (build-stap)
 # Dit script draait AUTOMATISCH en NIET-INTERACTIEF bij het bouwen van de Codespace
-# (via postCreateCommand in .devcontainer/devcontainer.json).
+# (via onCreateCommand in .devcontainer/devcontainer.json).
+#
+# Waarom onCreateCommand i.p.v. postCreateCommand? Codespaces Prebuilds bakken wél
+# onCreateCommand/updateContentCommand mee in de snapshot, maar NIET postCreateCommand.
+# Door de zware install hier te doen, profiteren deelnemers van de prebuild en is de
+# Codespace in seconden klaar.
 #
 # Het vraagt bewust NIETS: lifecycle-hooks van een devcontainer hebben geen
 # interactieve terminal, dus 'read' werkt hier niet. Daarom doen we hier alleen
 # het zware, niet-interactieve werk (dependencies + Claude Code installeren) en
 # registreren we een hook in ~/.bashrc die het interactieve deel (workshop-init.sh)
 # afvuurt zodra de deelnemer een terminal opent.
-
-set -e
+#
+# BEWUST GEEN 'set -e': een tijdelijke netwerk-/npm-hapering mag NOOIT de hele
+# Codespace-creatie laten falen ("Failed to create"). Elke stap vangt zijn eigen
+# fouten af en het script eindigt altijd met exit 0.
 
 # Absoluut pad naar deze repo (robuust, ongeacht waar de Codespace 'm mount).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -79,3 +86,6 @@ if ! grep -q "$HOOK_MARKER" ~/.bashrc 2>/dev/null; then
 fi
 
 echo "✓ Build-stap klaar. De workshopvragen verschijnen zodra de deelnemer een terminal opent."
+
+# Altijd succesvol eindigen — de creatie mag niet falen op een niet-kritieke hapering.
+exit 0
