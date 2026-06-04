@@ -52,7 +52,7 @@ mkdir -p "$HOME/.claude"
 SETTINGS_JSON="$HOME/.claude/settings.json"
 if command -v jq >/dev/null 2>&1 && [ -f "$SETTINGS_JSON" ]; then
   TMP_SETTINGS="$(mktemp)"
-  jq '.permissions.defaultMode = "auto" | .skipAutoPermissionPrompt = true' \
+  jq '.permissions.defaultMode = "auto" | .skipAutoPermissionPrompt = true | .model = "sonnet"' \
     "$SETTINGS_JSON" > "$TMP_SETTINGS" 2>/dev/null && mv "$TMP_SETTINGS" "$SETTINGS_JSON"
 else
   cat > "$SETTINGS_JSON" <<'EOF'
@@ -60,11 +60,12 @@ else
   "permissions": {
     "defaultMode": "auto"
   },
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "model": "sonnet"
 }
 EOF
 fi
-echo "  • Claude Code ingesteld op auto-mode (~/.claude/settings.json)"
+echo "  • Claude Code ingesteld op auto-mode + standaardmodel Sonnet (~/.claude/settings.json)"
 
 # 4. Hook registreren in ~/.bashrc: draai workshop-init.sh één keer in de eerste
 #    interactieve terminal. Beschermd door:
