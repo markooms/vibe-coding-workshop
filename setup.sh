@@ -49,6 +49,8 @@ if ! grep -q "$HOOK_MARKER" ~/.bashrc 2>/dev/null; then
     echo "if [[ \$- == *i* ]] && [ ! -f \"\$HOME/.workshop-setup-done\" ]; then"
     echo "  bash \"$INIT_SCRIPT\""
     echo "fi"
+    echo "# Laad de API key in DEZE shell (direct na init) en in elke nieuwe terminal."
+    echo "[ -f \"\$HOME/.workshop-env\" ] && source \"\$HOME/.workshop-env\""
     echo "# <<< vibe-workshop init hook <<<"
   } >> ~/.bashrc
   echo "  • Terminal-hook geregistreerd in ~/.bashrc"

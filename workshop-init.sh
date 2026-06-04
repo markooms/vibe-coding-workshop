@@ -97,9 +97,36 @@ fi
 
 # === CONFIGURATIE STARTEN ===
 
-# 1. API key opslaan
-echo "export ANTHROPIC_API_KEY=$API_KEY" >> ~/.bashrc
+# 1. API key opslaan in een apart env-bestand.
+#    De ~/.bashrc-hook (zie setup.sh) sourcet dit bestand, zodat de key zowel in
+#    DEZE terminal (direct na dit script) als in elke nieuwe terminal beschikbaar is.
+echo "export ANTHROPIC_API_KEY='$API_KEY'" > "$HOME/.workshop-env"
 export ANTHROPIC_API_KEY="$API_KEY"
+
+# 1b. Claude Code vooraf configureren zodat er geen prompts verschijnen:
+#     - hasCompletedOnboarding: slaat de thema-/welkomstkeuze over
+#     - customApiKeyResponses.approved: keurt deze API key vooraf goed
+#       (waarde = laatste 20 tekens van de key; ongedocumenteerd maar dit is hoe
+#       Claude Code de goedkeuring onthoudt). Mislukt dit, dan zie je hooguit
+#       eenmalig de "gebruik deze API key?"-popup — niet kritiek.
+mkdir -p "$HOME/.claude"
+KEY_SUFFIX="${API_KEY: -20}"
+CLAUDE_JSON="$HOME/.claude.json"
+if command -v jq >/dev/null 2>&1; then
+  if [ -f "$CLAUDE_JSON" ]; then
+    TMP_JSON="$(mktemp)"
+    jq --arg s "$KEY_SUFFIX" '
+      .hasCompletedOnboarding = true
+      | .customApiKeyResponses.approved = (((.customApiKeyResponses.approved // []) + [$s]) | unique)
+      | .customApiKeyResponses.rejected = (.customApiKeyResponses.rejected // [])
+    ' "$CLAUDE_JSON" > "$TMP_JSON" 2>/dev/null && mv "$TMP_JSON" "$CLAUDE_JSON"
+  else
+    jq -n --arg s "$KEY_SUFFIX" '
+      { hasCompletedOnboarding: true,
+        customApiKeyResponses: { approved: [$s], rejected: [] } }
+    ' > "$CLAUDE_JSON"
+  fi
+fi
 
 # Haal config op
 STACK=$(echo "$RESPONSE" | jq -r '.config.stack // "onbekend"')
