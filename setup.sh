@@ -37,6 +37,28 @@ fi
 # 3. workshop-init.sh uitvoerbaar maken
 chmod +x "$INIT_SCRIPT" 2>/dev/null || true
 
+# 3b. Claude Code in 'auto' permission-mode laten starten, zodat een kale `claude`
+#     direct alles uitvoert zonder per-actie te vragen (de auto-mode heeft een
+#     ingebouwde veiligheidsclassifier die echt gevaarlijke acties blokkeert).
+#     skipAutoPermissionPrompt onderdrukt de eenmalige waarschuwing.
+mkdir -p "$HOME/.claude"
+SETTINGS_JSON="$HOME/.claude/settings.json"
+if command -v jq >/dev/null 2>&1 && [ -f "$SETTINGS_JSON" ]; then
+  TMP_SETTINGS="$(mktemp)"
+  jq '.permissions.defaultMode = "auto" | .skipAutoPermissionPrompt = true' \
+    "$SETTINGS_JSON" > "$TMP_SETTINGS" 2>/dev/null && mv "$TMP_SETTINGS" "$SETTINGS_JSON"
+else
+  cat > "$SETTINGS_JSON" <<'EOF'
+{
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "skipAutoPermissionPrompt": true
+}
+EOF
+fi
+echo "  • Claude Code ingesteld op auto-mode (~/.claude/settings.json)"
+
 # 4. Hook registreren in ~/.bashrc: draai workshop-init.sh één keer in de eerste
 #    interactieve terminal. Beschermd door:
 #    - interactieve shell-check ([[ $- == *i* ]])
