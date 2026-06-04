@@ -45,7 +45,8 @@ Je Codespace en je code blijven in jouw GitHub-account staan, maar het is slim o
 Leuk dat je verder wilt! Een paar dingen om te weten:
 
 - Je **Codespace blijft bestaan** in je GitHub-account. Je opent 'm later weer via **[github.com/codespaces](https://github.com/codespaces)**.
-- Codespaces zijn een aantal uur per maand gratis; daarna kan het (een beetje) geld kosten. Zorg er dus voor dat je je code hebt opgeslagen (zie *Je werk opslaan* hierboven).
+- Codespaces zijn **gratis** tot een bepaalde hoeveelheid per maand (ongeveer **60 uur** op de standaardcomputer). Er is **geen creditcard gekoppeld**, dus het kan je **nooit geld kosten**: heb je de gratis tijd opgebruikt, dan pauzeert je Codespace gewoon tot het begin van de volgende maand (je quota reset dan automatisch).
+- Omdat een Codespace kan pauzeren, is het slim om je code op te slaan in een eigen project (zie *Je werk opslaan* hierboven) — dan ben je nooit iets kwijt.
 - **De workshop-toegang (API-key) wordt na de workshop uitgezet.** Dat is normaal. Om verder te kunnen, koppel je je *eigen* account. Hieronder lees je hoe — kies de optie die bij jou past.
 
 ### Optie A — Met een Claude-account (makkelijkst)
@@ -95,6 +96,16 @@ Heb je geen Claude, maar wél een **ChatGPT-account**? Dan kun je verder met **C
 > Codex werkt met de meeste ChatGPT-abonnementen (Free, Plus, Pro, e.a.). Meer info: **[developers.openai.com/codex](https://developers.openai.com/codex/cli)**.
 >
 > Let op: Codex is een ander programma dan Claude. De Claude-instellingen uit deze workshop gelden er niet voor — je typt `codex` in plaats van `claude`.
+
+### Of: nog makkelijker, zónder terminal
+
+Vond je de terminal nog wat spannend? Er zijn ook **"no-code" AI-bouwers** waarmee je gewoon in je browser een app bouwt door te chatten — géén GitHub, Codespace of terminal nodig:
+
+- **[Lovable](https://lovable.dev)** — beschrijf je app in gewone taal en Lovable bouwt 'm voor je.
+- **[Bolt](https://bolt.new)** — bouw complete web-apps direct in je browser.
+- **[Google AI Studio](https://aistudio.google.com)** — experimenteer (gratis) met Google's AI en bouw er kleine apps mee.
+
+Maak een (gratis) account aan en begin meteen met typen wat je wilt maken. Ideaal om thuis verder te spelen zonder gedoe met installeren.
 
 ---
 
