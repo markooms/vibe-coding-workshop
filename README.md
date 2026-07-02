@@ -21,6 +21,15 @@ Toen je deze Codespace opende, is de omgeving automatisch klaargezet (o.a. Claud
 
 > Zie je de vragen niet automatisch? Typ dan `bash workshop-init.sh` in de terminal.
 
+## 💡 Tip: vraag in kleine stappen
+
+Claude kan in één keer een hele app proberen te bouwen, maar dan zit je soms minuten te wachten zonder iets te zien. Veel leuker (en sneller zichtbaar): **vraag één klein ding tegelijk**.
+
+- ✅ Goed: *"Maak een pagina met een knop die 'Hallo' laat zien als ik erop klik."* → daarna: *"Maak de knop blauw."* → daarna: *"Voeg een invoerveld toe."*
+- 🐌 Trager: *"Bouw een complete webshop met inlog, winkelmandje en betaling."*
+
+Zo zie je **elke paar minuten resultaat** in je scherm en kun je makkelijk bijsturen. Werkt iets goed? **Sla het meteen op** (zie hieronder) en ga verder met de volgende kleine stap.
+
 ## Hulp nodig?
 
 - **Workshopvragen opnieuw beantwoorden**: typ `bash workshop-init.sh` in de terminal
@@ -28,15 +37,25 @@ Toen je deze Codespace opende, is de omgeving automatisch klaargezet (o.a. Claud
 - **Instructies bekijken**: open `INSTRUCTIONS.md` (als die er is)
 - **Vraag je workshopleider** als je er niet uitkomt
 
-## Je werk opslaan
+## 💾 Je werk opslaan (doe dit zodra je iets werkends hebt!)
 
-Je Codespace en je code blijven in jouw GitHub-account staan, maar het is slim om je werk apart op te slaan in een eigen project:
+> **Belangrijk:** deze werkplek heeft nog **geen eigen project** op GitHub. Sla je werk daarom vroeg op — dan ben je nooit iets kwijt. Het kost één klik.
 
-1. Klik op het **Source Control** icoon in de zijbalk (of druk Ctrl+Shift+G)
-2. Klik op **Publish Branch**
+**Zo sla je je werk de eerste keer op:**
+
+1. Klik op het **Source Control** icoon in de linker zijbalk (of druk **Ctrl+Shift+G**)
+2. Klik op de blauwe knop **Publish Branch**
 3. Kies **Publish to GitHub private repository**
-4. Geef je repo een naam
-5. Klaar — je code staat nu veilig op jouw GitHub!
+4. Geef je project een naam → **Enter**
+5. Klaar — je code staat nu veilig in jouw eigen GitHub-project! 🎉
+
+**Daarna opslaan (elke keer dat je iets nieuws hebt gemaakt):**
+
+1. Ga weer naar **Source Control** (Ctrl+Shift+G)
+2. Klik op **Commit & Sync** (of het ronde sync-pijltje 🔄)
+3. Klaar — je nieuwste werk staat weer veilig opgeslagen.
+
+> ⚠️ **Gebruik de knop, niet de terminal.** Typ dus géén `git push` in de terminal — dat werkt hier (nog) niet en geeft een foutmelding. De **Publish**- en **Commit & Sync**-knoppen regelen alles voor je.
 
 ---
 
