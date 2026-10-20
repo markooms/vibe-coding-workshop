@@ -57,7 +57,7 @@ echo -e "  ${DIM}Verbinden met workshop service...${NC}"
 RESPONSE=$(curl -s --max-time 20 -X POST "$KEY_SERVICE_URL/api/claim-key" \
   -H "Content-Type: application/json" \
   -H "ngrok-skip-browser-warning: 1" \
-  -d "{\"workshopCode\": \"$WORKSHOP_CODE\", \"participantName\": \"$PARTICIPANT_NAME\"}")
+  -d "$(jq -n --arg c "$WORKSHOP_CODE" --arg n "$PARTICIPANT_NAME" '{workshopCode: $c, participantName: $n}')")
 
 # Noodplan: is de service onbereikbaar (geen antwoord, timeout, of een
 # ngrok-foutpagina in plaats van JSON), dan kan de deelnemer een API key
@@ -121,6 +121,14 @@ fi
 #    DEZE terminal (direct na dit script) als in elke nieuwe terminal beschikbaar is.
 echo "export ANTHROPIC_API_KEY='$API_KEY'" > "$HOME/.workshop-env"
 export ANTHROPIC_API_KEY="$API_KEY"
+
+# 1a. Model dat de workshopleider voor deze hackathon koos (alias zoals "opus").
+#     Alleen een veilige alias; zonder (noodplan) blijft de standaard uit setup.sh.
+MODEL=$(echo "$RESPONSE" | jq -r '.model // empty')
+if [[ "$MODEL" =~ ^[a-z0-9.-]+$ ]]; then
+  echo "export ANTHROPIC_MODEL='$MODEL'" >> "$HOME/.workshop-env"
+  export ANTHROPIC_MODEL="$MODEL"
+fi
 
 # 1b. Claude Code vooraf configureren zodat er geen prompts verschijnen:
 #     - hasCompletedOnboarding: slaat de thema-/welkomstkeuze over
