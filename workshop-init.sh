@@ -5,7 +5,7 @@
 # Het vraagt om je workshopcode + naam en haalt je API key op.
 # Wordt aangeroepen vanuit ~/.bashrc (één keer, daarna staat de vlag ~/.workshop-setup-done).
 
-KEY_SERVICE_URL="https://unskillful-stompingly-cleora.ngrok-free.dev"
+KEY_SERVICE_URL="https://workshoptool-claim.markooms.workers.dev"
 DONE_FLAG="$HOME/.workshop-setup-done"
 
 # Kleuren
@@ -54,13 +54,16 @@ fi
 # Haal configuratie op van de key vending service
 echo -e "  ${DIM}Verbinden met workshop service...${NC}"
 
-RESPONSE=$(curl -s -X POST "$KEY_SERVICE_URL/api/claim-key" \
+RESPONSE=$(curl -s --max-time 20 -X POST "$KEY_SERVICE_URL/api/claim-key" \
   -H "Content-Type: application/json" \
   -H "ngrok-skip-browser-warning: 1" \
-  -d "{\"workshopCode\": \"$WORKSHOP_CODE\", \"participantName\": \"$PARTICIPANT_NAME\"}")
+  -d "$(jq -n --arg c "$WORKSHOP_CODE" --arg n "$PARTICIPANT_NAME" '{workshopCode: $c, participantName: $n}')")
 
-# Check of curl gelukt is
-if [ $? -ne 0 ] || [ -z "$RESPONSE" ]; then
+# Noodplan: is de service onbereikbaar (geen antwoord, timeout, of een
+# ngrok-foutpagina in plaats van JSON), dan kan de deelnemer een API key
+# plakken die de workshopleider apart heeft gedeeld. Er komen dan geen
+# templatebestanden mee, maar Claude Code werkt wel.
+if ! echo "$RESPONSE" | jq -e 'type == "object"' >/dev/null 2>&1; then
   echo ""
   echo -e "  ${YELLOW}⚠️  Kan de workshop service niet bereiken.${NC}"
   echo ""
@@ -68,9 +71,25 @@ if [ $? -ne 0 ] || [ -z "$RESPONSE" ]; then
   echo -e "  ${DIM}• De workshopleider heeft de service nog niet gestart${NC}"
   echo -e "  ${DIM}• Je hebt geen internetverbinding${NC}"
   echo ""
-  echo -e "  Probeer opnieuw met: ${BOLD}bash workshop-init.sh${NC}"
+  echo -e "  Heeft je workshopleider een ${BOLD}noodsleutel${NC} gedeeld? Plak die dan hieronder."
+  echo -e "  ${DIM}Geen noodsleutel? Druk op Enter en probeer later opnieuw met: ${BOLD}bash workshop-init.sh${NC}"
   echo ""
-  exit 1
+  read -p "$(echo -e "${CYAN}?${NC}") Noodsleutel: " MANUAL_KEY
+  MANUAL_KEY="$(echo "$MANUAL_KEY" | tr -d '[:space:]')"
+
+  if [ -z "$MANUAL_KEY" ]; then
+    echo ""
+    exit 1
+  fi
+  if [[ "$MANUAL_KEY" != sk-ant-* ]]; then
+    echo ""
+    echo -e "  ${RED}✗ Dit lijkt geen geldige sleutel (die begint met sk-ant-).${NC}"
+    echo -e "  Probeer opnieuw met: ${BOLD}bash workshop-init.sh${NC}"
+    echo ""
+    exit 1
+  fi
+
+  RESPONSE=$(jq -n --arg k "$MANUAL_KEY" '{apiKey: $k, config: {stack: "noodplan", template: "geen", files: {}}}')
 fi
 
 # Check voor errors in de response
@@ -102,6 +121,14 @@ fi
 #    DEZE terminal (direct na dit script) als in elke nieuwe terminal beschikbaar is.
 echo "export ANTHROPIC_API_KEY='$API_KEY'" > "$HOME/.workshop-env"
 export ANTHROPIC_API_KEY="$API_KEY"
+
+# 1a. Model dat de workshopleider voor deze hackathon koos (alias zoals "opus").
+#     Alleen een veilige alias; zonder (noodplan) blijft de standaard uit setup.sh.
+MODEL=$(echo "$RESPONSE" | jq -r '.model // empty')
+if [[ "$MODEL" =~ ^[a-z0-9.-]+$ ]]; then
+  echo "export ANTHROPIC_MODEL='$MODEL'" >> "$HOME/.workshop-env"
+  export ANTHROPIC_MODEL="$MODEL"
+fi
 
 # 1b. Claude Code vooraf configureren zodat er geen prompts verschijnen:
 #     - hasCompletedOnboarding: slaat de thema-/welkomstkeuze over
