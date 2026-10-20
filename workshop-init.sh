@@ -5,7 +5,7 @@
 # Het vraagt om je workshopcode + naam en haalt je API key op.
 # Wordt aangeroepen vanuit ~/.bashrc (één keer, daarna staat de vlag ~/.workshop-setup-done).
 
-KEY_SERVICE_URL="https://workshoptool.markooms.workers.dev"
+KEY_SERVICE_URL="https://workshoptool-claim.markooms.workers.dev"
 DONE_FLAG="$HOME/.workshop-setup-done"
 
 # Kleuren
