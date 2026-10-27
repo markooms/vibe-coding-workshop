@@ -16,10 +16,10 @@ Toen je deze Codespace opende, is de omgeving automatisch klaargezet (o.a. Claud
 
 1. Open een **nieuwe terminal** (Ctrl+` of Terminal → New Terminal)
 2. De **workshopvragen verschijnen automatisch** — voer je **workshopcode** en **naam** in
-3. Zodra je een ✅ ziet, typ je `claude` en druk je op Enter
+3. Zodra je een ✅ ziet, start Claude vanzelf
 4. Beschrijf wat je wilt bouwen — Claude helpt je!
 
-> Zie je de vragen niet automatisch? Typ dan `bash workshop-init.sh` in de terminal.
+> Zie je de vragen niet automatisch? Typ dan `bash workshop-init.sh` in de terminal. Heb je Claude afgesloten? Typ `claude` om hem weer te starten.
 
 ## 💡 Tip: vraag in kleine stappen
 

@@ -132,6 +132,8 @@ fi
 
 # 1b. Claude Code vooraf configureren zodat er geen prompts verschijnen:
 #     - hasCompletedOnboarding: slaat de thema-/welkomstkeuze over
+#     - projects[<map>].hasTrustDialogAccepted: slaat "Do you trust the files in
+#       this folder?" over voor deze map (ongedocumenteerd, zelfde verhaal als hieronder)
 #     - customApiKeyResponses.approved: keurt deze API key vooraf goed
 #       (waarde = laatste 20 tekens van de key; ongedocumenteerd maar dit is hoe
 #       Claude Code de goedkeuring onthoudt). Mislukt dit, dan zie je hooguit
@@ -142,14 +144,16 @@ CLAUDE_JSON="$HOME/.claude.json"
 if command -v jq >/dev/null 2>&1; then
   if [ -f "$CLAUDE_JSON" ]; then
     TMP_JSON="$(mktemp)"
-    jq --arg s "$KEY_SUFFIX" '
+    jq --arg s "$KEY_SUFFIX" --arg p "$PWD" '
       .hasCompletedOnboarding = true
+      | .projects[$p].hasTrustDialogAccepted = true
       | .customApiKeyResponses.approved = (((.customApiKeyResponses.approved // []) + [$s]) | unique)
       | .customApiKeyResponses.rejected = (.customApiKeyResponses.rejected // [])
     ' "$CLAUDE_JSON" > "$TMP_JSON" 2>/dev/null && mv "$TMP_JSON" "$CLAUDE_JSON"
   else
-    jq -n --arg s "$KEY_SUFFIX" '
+    jq -n --arg s "$KEY_SUFFIX" --arg p "$PWD" '
       { hasCompletedOnboarding: true,
+        projects: { ($p): { hasTrustDialogAccepted: true } },
         customApiKeyResponses: { approved: [$s], rejected: [] } }
     ' > "$CLAUDE_JSON"
   fi
@@ -219,10 +223,6 @@ echo ""
 echo -e "  ${DIM}────────────────────────────────────${NC}"
 echo -e "  ${GREEN}${BOLD}✅ Alles is klaar!${NC}"
 echo ""
-echo -e "  Je kunt nu direct beginnen — typ:"
-echo ""
-echo -e "     ${BOLD}claude${NC}"
-echo ""
 
 # Check of er INSTRUCTIONS.md is
 if [ -f "INSTRUCTIONS.md" ]; then
@@ -235,3 +235,19 @@ echo ""
 
 # Laad de zojuist opgeslagen ANTHROPIC_API_KEY in deze shell-sessie.
 export ANTHROPIC_API_KEY="$API_KEY"
+
+# Start Claude Code direct in deze terminal, zodat niemand zelf 'claude' hoeft
+# te typen. Bewust geen 'exec': na /exit loopt ~/.bashrc verder en houdt de
+# deelnemer een gewone terminal met de key geladen.
+if command -v claude >/dev/null 2>&1; then
+  echo -e "  ${BOLD}Claude Code start nu...${NC}"
+  echo -e "  ${DIM}Later opnieuw starten? Typ: claude${NC}"
+  echo ""
+  sleep 2
+  claude
+else
+  echo -e "  Je kunt nu direct beginnen — typ:"
+  echo ""
+  echo -e "     ${BOLD}claude${NC}"
+  echo ""
+fi
